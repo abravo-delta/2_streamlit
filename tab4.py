@@ -9,6 +9,8 @@ import pythoncom
 
 pythoncom.CoInitialize()
 
+#Comit nuevo
+
 
 # Funciones
 def consultar_paridades(mañana):
