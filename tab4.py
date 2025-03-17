@@ -7,11 +7,6 @@
 # import win32com.client
 # import pythoncom
 
-# pythoncom.CoInitialize()
-
-# #Comit nuevo
-
-
 # # Funciones
 # def consultar_paridades(mañana):
 #     driver.find_element(By.ID,"_calendarioButton").click()
@@ -38,7 +33,7 @@
 # def correo_alerta(texto):
 #     outlook = win32com.client.Dispatch("Outlook.Application")
 #     mail = outlook.CreateItem(0)
-#     mail.To = "jariasf@deltasf.cl;malarcon@deltasf.cl"
+#     mail.To = "malarcon@deltasf.cl"
 #     mail.Subject = "Dolar"
 #     mail.Body = texto
 #     mail.Send()
@@ -60,7 +55,5 @@ def extraer_bco_central():
     driver = webdriver.Edge() 
     driver.get(banco_central_url)
 
-    consultar_paridades(mañana)
-    revisar_dolar()
-
-# pythoncom.CoUninitialize()
+    # consultar_paridades(mañana)
+    # revisar_dolar()
