@@ -5,17 +5,35 @@ import openpyxl
 from datetime import datetime
 import numpy as np
 
-print(pythoncom.__file__)
+#print(pythoncom.__file__)
 st.title("Robot Amanda y Max")
 st.write("Robot que pretende ayudar a Amanda en automatizaciones")
 
 tab1, tab2, tab3, tab4 = st.tabs([":moneybag: Dividendos", ":repeat: Traspasos internos", ":1234: Renta Fija", ":dollar: Paridades"])
 
 with tab1:
-    menu = st.selectbox("",["Dividendos nacionales", "Dividendos internacionales"])
+    menu = st.selectbox("",["Dividendos Nacionales", "Dividendos internacionales"])
+    if menu == "Dividendos Nacionales":
+        div_xlsx = st.file_uploader("Suba un archivo Excel", type=["xlsx"], key = "file1")
+        if div_xlsx:
+            div_ac_df = pd.read_excel(div_xlsx, sheet_name="Dividendos acciones nacionales")
+            columnas = div_ac_df.iloc[10,:].values
+            div_ac_df = div_ac_df.iloc[11:,:]
+            div_ac_df.columns = columnas
+            hoy = datetime.today()
+            div_ac_df = div_ac_df[div_ac_df["Límite (1)"] != "-"]
+            div_ac_df = div_ac_df[div_ac_df["Límite (1)"] > hoy]
+            div_ac_df = div_ac_df[['Nemotécnico', 'Tipo Instrumento', 'Por Acción / cuota', 'Límite (1)', 'Pago']]
+            div_ac_df['Límite (1)'] = pd.to_datetime(div_ac_df['Límite (1)'])
+            div_ac_df['Límite (1)'] = div_ac_df['Límite (1)'].dt.strftime('%d-%m-%Y')
+            div_ac_df['Pago'] = pd.to_datetime(div_ac_df['Pago'])
+            div_ac_df['Pago'] = div_ac_df['Pago'].dt.strftime('%d-%m-%Y')
+            print(columnas)
+            st.write("Dividendos Acciones Nacionales")
+            st.dataframe(div_ac_df)  # Permite desplazamiento, ordenamiento y búsqueda
 
 with tab2:
-    archivo = st.file_uploader("Sube un archivo Excel", type=["xlsx"])
+    archivo = st.file_uploader("Sube un archivo Excel", type=["xlsx"], key = "file2")
     if archivo:
         df = pd.read_excel(archivo, sheet_name="Hoja1")
         
