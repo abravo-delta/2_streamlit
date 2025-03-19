@@ -4,6 +4,8 @@ import openpyxl
 from datetime import datetime, timedelta
 import numpy as np
 import tabula
+import pdfplumber
+from io import BytesIO
 
 
 # Configuración de la página
@@ -19,7 +21,7 @@ st.session_state['fecha'] = fecha
 
 # Menú
 st.sidebar.title("Menú")
-option = st.sidebar.selectbox("Selecciona una página:", ["Home", "Dividendos", "Traspasos", "Valorización", "Divisas", "MBI"])
+option = st.sidebar.selectbox("Selecciona una página:", ["Home", "Dividendos", "Traspasos", "Valorización", "Divisas", "MBI", "Cuotas Propias"])
 
 if option == "Home":
     st.write("Bienvenido al robot de procesos diarios de Amanda.")
@@ -97,10 +99,6 @@ elif option == "Traspasos":
         df['Fecha Operacion'] = fecha.strftime('%d/%m/%Y')
         df['Fecha liquidacion'] = fecha.strftime('%d/%m/%Y')
 
-        # Mostrar
-        st.write("Archivo inicial")
-        st.dataframe(df)
-
         def separar_traspasos(i, j):
             df_x = df[df.iloc[:, i].notna()].drop(df.columns[j], axis=1)
             df_x.columns.values[3] = "Cantidad" 
@@ -115,26 +113,50 @@ elif option == "Traspasos":
         df_egreso = separar_traspasos(3, 4)
         df_ingreso = separar_traspasos(4, 3)
 
-        col1, col2 = st.columns(2)
+        # Crear variables por nemo
+        sum_q_ing = df_ingreso.groupby("Nemotecnico")["Cantidad"].sum().reset_index()
+        sum_q_egr = df_egreso.groupby("Nemotecnico")["Cantidad"].sum().reset_index()
+        prom_p_ing = df_ingreso.groupby("Nemotecnico")["Precio"].mean().reset_index()
+        prom_p_egr = df_egreso.groupby("Nemotecnico")["Precio"].mean().reset_index()
+        sum_monto_ing = df_ingreso.groupby("Nemotecnico")["Monto"].sum().reset_index()
+        sum_monto_egr = df_egreso.groupby("Nemotecnico")["Monto"].sum().reset_index()
 
-        with col1:
-            st.write("Ingresos")
-            df_in = st.dataframe(df_ingreso)
-            df_ingreso = df_ingreso.drop(columns=['P*Q','Dif'])
-            file_path = "Ingresos.xlsx"
-            with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
-                df_ingreso.to_excel(writer, index=False)
-            with open(file_path, "rb") as f:
+        # Juntar df
+        res_traspasos = sum_q_ing.merge(sum_q_egr, on="Nemotecnico").merge(prom_p_ing, on="Nemotecnico").merge(prom_p_egr, on="Nemotecnico").merge(sum_monto_ing, on="Nemotecnico").merge(sum_monto_egr, on="Nemotecnico")
+        res_traspasos = res_traspasos.rename(columns={"Cantidad_x":"Cantidad Ingreso", "Cantidad_y":"Cantidad Egreso", "Precio_x":"Precio Ingreso", "Precio_y":"Precio Egreso", "Monto_x":"Monto Ingreso", "Monto_y":"Monto Egreso"})
+
+
+        # Loop por nemos que si la diferencia entre Cantidad Ingreso y Cantidad Egreso = 0 entonces muestre la cantidad ingreso
+        for i in range(len(res_traspasos)):
+            st.write(res_traspasos["Nemotecnico"][i])
+            col1, col2, col3 = st.columns(3)
+            if res_traspasos["Cantidad Ingreso"][i] == res_traspasos["Cantidad Egreso"][i] and res_traspasos["Precio Ingreso"][i] == res_traspasos["Precio Egreso"][i] and res_traspasos["Monto Ingreso"][i] == res_traspasos["Monto Egreso"][i]:
+                with col1:
+                    st.metric(label="Cantidad", value=res_traspasos['Cantidad Ingreso'])
+                with col2:
+                    st.metric(label="Precio", value=res_traspasos['Precio Ingreso'])
+                with col3:
+                    st.metric(label="Monto", value=res_traspasos['Monto Ingreso'])
+            else:
+                st.dataframe(res_traspasos)
+
+                df_ingreso = df_ingreso.drop(columns=['P*Q','Dif'])
+        
+        # Descarga
+        col1, col2 = st.columns(2)
+        file_path = "Ingresos.xlsx"
+        with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
+            df_ingreso.to_excel(writer, index=False)
+        with open(file_path, "rb") as f:
+            with col1:
                 st.download_button("Descargar Ingresos", f, file_name="Ingresos.xlsx")                
 
-        with col2:
-            st.write("Egresos")
-            df_eg = st.dataframe(df_egreso)
-            df_egreso = df_egreso.drop(columns=['P*Q','Dif'])
-            file_path = "Egresos.xlsx"
-            with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
-                df_egreso.to_excel(writer, index=False)
-            with open(file_path, "rb") as f:
+        df_egreso = df_egreso.drop(columns=['P*Q','Dif'])
+        file_path = "Egresos.xlsx"
+        with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
+            df_egreso.to_excel(writer, index=False)
+        with open(file_path, "rb") as f:
+            with col2:
                 st.download_button("Descargar Egresos", f, file_name="Egresos.xlsx")
 
 elif option == "Valorización":
@@ -186,3 +208,38 @@ elif option == "Divisas":
 
 elif option == "MBI":
     pass
+
+elif option == "Cuotas Propias":
+    uploaded_file = st.file_uploader("Entregue el reporte", type="pdf")
+    if uploaded_file:
+        with pdfplumber.open(uploaded_file) as pdf:
+            table = pdf.pages[0].extract_table()
+            if table:
+                df = pd.DataFrame(table)
+                df.columns = df.iloc[0]
+                df = df[1:].reset_index(drop=True)
+                df = df[:-1]
+                df['COMPRA'] = df['COMPRA'].apply(lambda x: int(x.replace('.', '')) if x != '' else np.nan)
+                df['VENTA'] = df['VENTA'].apply(lambda x: int(x.replace('.', '')) if x != '' else np.nan)
+                df['Cuenta'] = "76081068-1/0"
+                df['Nemotecnico'] = df['DOCUMENTO'].apply(lambda x: x.split()[0] if pd.notnull(x) else None)
+                df['Tipo Precio'] = "L"
+                df['Cantidad'] = df['CANTIDAD']
+                df['PRECIO'] = df['PRECIO'].apply(lambda x: float(x.replace('.', '').replace(',', '.')) if x != '' else np.nan)
+                df['Precio'] = df['PRECIO']
+                df['Fecha Operacion'] = df['DOCUMENTO'].apply(lambda x: x.split()[-1] if pd.notnull(x) else None)
+                df['Fecha liquidacion'] = df['DOCUMENTO'].apply(lambda x: x.split()[-1] if pd.notnull(x) else None)
+                df['Monto'] = df['COMPRA'] + df['VENTA']
+                df = df[['Cuenta', 'Nemotecnico', 'Tipo Precio', 'Cantidad', 'Precio', 'Fecha Operacion', 'Fecha liquidacion', 'Monto']]
+                st.dataframe(df)
+                output = BytesIO()
+                with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                    df.to_excel(writer, index=False, sheet_name='Sheet1')
+                output.seek(0)
+
+                st.download_button(
+                    label="Descargar archivo",
+                    data=output,
+                    file_name="Cuotas_Propias.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
