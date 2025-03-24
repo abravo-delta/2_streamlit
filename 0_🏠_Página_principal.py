@@ -14,10 +14,6 @@ fecha = st.sidebar.date_input('Fecha', value=hoy)
 fecha = datetime.combine(fecha, datetime.min.time())
 st.session_state['fecha'] = fecha
 
-# Bienvenida
-st.write("Bienvenido al robot de procesos diarios de Amanda.")
-st.write("Este robot tiene el objetivo de ayudar en las tareas básicas del equipo de operaciones. ¡Diviertete!")
-
 # Función para cargar datos
 @st.cache_data
 def load_data(file_path):

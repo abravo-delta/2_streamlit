@@ -38,9 +38,10 @@ with col1:
 
 with col2:
     if 'merge2' in locals():
-        st.dataframe(merge2)
-        # Descargar en formato xls nombre Archivo Para Valorizar Cartera RENTA FIJA NACIONAL NEVASA (Risk America) dd-mm-yyyy_INPUT_OUT.
-        file_path = "Archivo Para Valorizar Cartera RENTA FIJA NACIONAL NEVASA (Risk America) " + fecha.strftime('%d-%m-%Y') + "_INPUT_OUT.xlsx"
+        st.dataframe(merge2) 
+
+        # Descargar en formato xls nombre Archivo Para Valorizar Cartera RENTA FIJA NACIONAL NEVASA (Risk America) dd-mm-yyyy.
+        file_path = "Archivo Para Valorizar Cartera RENTA FIJA NACIONAL NEVASA (Risk America) " + fecha.strftime('%d-%m-%Y') + ".xlsx"
         with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
             merge2.to_excel(writer, index=False)
         with open(file_path, "rb") as f:

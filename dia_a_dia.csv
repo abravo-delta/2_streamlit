@@ -1,8 +1,13 @@
 Checklist,Tarea,Subtarea
 True,Dividendos,
-,Ahorro,MBI
-,Ahorro,CRM
-,Ahorro,Chile
-,Ahorro,BICE
-,Traspasos,
+True,Ahorro,MBI
+True,Ahorro,CRM
+True,Ahorro,Chile
+True,Ahorro,BICE
+True,Traspasos,
+False,Apoyo Alfre,"Risk America: RVNAC. Descargar, Ingresar y Validar"
+,Apoyo Alfre,"Paridades: Dolar, Euro, Franco Suizo, Libra Esterlina"
+,Apoyo Alfre,"Cierres internacionales: Vision, Protection y MVP"
+,Apoyo Alfre,"Carteras: Vision, Protection y MVP"
+,Apoyo Alfre,Cuadratura Internacional + Student
 ,,
