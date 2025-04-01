@@ -1,36 +1,73 @@
 import streamlit as st
 import pandas as pd
 from datetime import timedelta
+from pages.auxiliares import *
+
+funcion =  '''Visibiliza los dividendos y repartos de capital de acciones nacionales y fondos mutuos nacionales presentes en cartera dentro del mes vigente.''' 
+
+inputs = '''1. **Cartola de Dividendos**: Abrir el boletín bursatil del último día habil disponible en la [Bolsa de Santiago](https://www.bolsadesantiago.com/estadisticas_boletinbursatil). Ir a la sección "Noticias Bursátiles", subsección "Resumenes" y descargar el "Resumen de Dividendos, Repartos de Capital y Emisiones de Acciones y Cuotas". Luego subirlo.  
+2. **Reportes de Carteras Vigentes Resumidas**: Abrir GPI y descargar las Carteras Vigentes Resumidas de Cada Fondo que tenga Fondos Mutuos Nacionales o Acciones nacionales. Luego, subirlas todas juntas. 
+'''
 
 # Configuración de la página
-st.set_page_config(page_title="Dividendos", page_icon="💰", layout="wide")
-st.markdown("# Dividendos")
-st.sidebar.header("Dividendos")
+config_page("Dividendos", "💰", funcion, inputs)
 
 # Variables
-fecha = st.session_state.get('fecha', 'no se encuentra')
-mes = fecha + timedelta(days=30)
+fecha = traer_fecha()
+mes = fecha + timedelta(days=90)
 ayer = fecha - timedelta(days=1)
 
 # Funciones 
-# Leer cartola de dividendos por hoja
+
+# Leer hojas de dividendos
+def dividendos():
+    div_xlsx = st.file_uploader("Suba la cartola de dividendos", 
+                                type=["xlsx"], 
+                                key = "file1")
+    if div_xlsx:
+        div_acc_int_df = cartola_dividendos(div_xlsx, "Dividendos acciones nacionales", 10)
+        div_cfi_int_df = cartola_dividendos(div_xlsx, "Dividendos CFI nacionales" , 10)
+        rep_cfi_cfi_df = cartola_dividendos(div_xlsx, "Repartos CFI-CFM" , 9)
+        div_acc_ext_df = cartola_dividendos(div_xlsx, "Dividendos emisores extranjeros" , 10)
+        dividendos_df = pd.concat([div_acc_int_df,
+                                   div_cfi_int_df,
+                                   rep_cfi_cfi_df,
+                                   div_acc_ext_df])
+        dividendos_df = dividendos_df.sort_values(by='Límite (1)')
+        return dividendos_df
+
+# Leer hoja de cartola de dividendos
 def cartola_dividendos(div_xlsx, hoja, column1):
     df = pd.read_excel(div_xlsx, sheet_name=hoja)
     columnas = df.iloc[column1, :].values
     df = df.iloc[column1+1:, :]
     df.columns = columnas
     try:
-        df = df.rename(columns={'Pesos': 'Nemotécnico'})
-        df = df.rename(columns={'Mercado': 'Tipo Instrumento'})
-        df = df.rename(columns={'Ex Date (1)': 'Límite (1)'})
+        df = df.rename(columns={'Pesos': 'Nemotécnico', 
+                                'Mercado': 'Tipo Instrumento', 
+                                'Ex Date (1)': 'Límite (1)'})
     except:
         pass
-    df = df[(pd.notnull(df['Límite (1)']))&(df['Límite (1)'] != "-")&(df['Límite (1)'] != "None")]
-    df = df[(pd.notnull(df["Pago"]))&(df["Pago"] != "-")&(df["Pago"] != "None")]
-    df = df[(df['Límite (1)'] >= ayer)&(df["Pago"] <= mes)]
-    df = df[['Nemotécnico', 'Tipo Instrumento', 'Moneda', 'Por Acción / cuota', 'Límite (1)', 'Pago']]
-    df['Límite (1)'] = pd.to_datetime(df['Límite (1)'])
-    df['Pago'] = pd.to_datetime(df['Pago'])
+    df = limpieza_cartola(df)
+    return df
+
+# Ajustar cartola de dividendos
+def limpieza_cartola(df):
+    limite_no_nulo = pd.notnull(df['Límite (1)']) & (df['Límite (1)'] != "-") & (df['Límite (1)'] != "None")
+    pago_no_nulo = pd.notnull(df['Pago']) & (df['Pago'] != "-") & (df['Pago'] != "None")    
+    df = df[limite_no_nulo & pago_no_nulo]
+    limite_nuevo = (df['Límite (1)'] >= ayer) | (df['Pago'] >= ayer)
+    limite_cerca = (df['Límite (1)'] <= mes) | (df['Pago'] <= mes)
+    df = df[limite_nuevo & limite_cerca]
+
+    df = df[['Nemotécnico', 
+             'Tipo Instrumento', 
+             'Moneda', 
+             'Por Acción / cuota', 
+             'Límite (1)', 
+             'Pago']]
+
+    df[['Límite (1)', 'Pago']] = df[['Límite (1)', 'Pago']].apply(lambda col: pd.to_datetime(col).dt.strftime('%d-%m-%Y'))
     return df
 
 # Leer carteras
@@ -44,20 +81,6 @@ def carteras():
             df.columns = ['Fondo', 'Nemotécnico']
             dataframes.append(df)
         return pd.concat(dataframes, ignore_index=True)
-
-# Leer dividendos
-def dividendos():
-    div_xlsx = st.file_uploader("Suba la cartola de dividendos", type=["xlsx"], key = "file1")
-    if div_xlsx:
-        div_acc_int_df = cartola_dividendos(div_xlsx, "Dividendos acciones nacionales", 10)
-        div_cfi_int_df = cartola_dividendos(div_xlsx, "Dividendos CFI nacionales" , 10)
-        rep_cfi_cfi_df = cartola_dividendos(div_xlsx, "Repartos CFI-CFM" , 9)
-        div_acc_ext_df = cartola_dividendos(div_xlsx, "Dividendos emisores extranjeros" , 10)
-        dividendos_df = pd.concat([div_acc_int_df,div_cfi_int_df,rep_cfi_cfi_df,div_acc_ext_df])
-        dividendos_df['Límite (1)'] = dividendos_df['Límite (1)'].dt.strftime('%d-%m-%Y')
-        dividendos_df['Pago'] = dividendos_df['Pago'].dt.strftime('%d-%m-%Y')
-        dividendos_df = dividendos_df.sort_values(by='Límite (1)')
-        return dividendos_df
 
 # Layout
 col1, col2 = st.columns(2)

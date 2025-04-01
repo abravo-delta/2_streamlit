@@ -1,13 +1,18 @@
 import streamlit as st
 import pandas as pd
+from pages.auxiliares import *
+
+funcion =  '''Genera archivo para ingresar a Risk America con nemotécnicos y cantidad de cada instrumento en cartera.''' 
+
+inputs = '''1. **Interfaz salida Risk America**: Abrir GPI, dirigirse al menú de Interfaz de salida Risk America y descargar el archivo de Renta Fija Nacional. Luego subirlo.  
+2. **Reporte de Cartera Vigente Resumida de Renta Fija**: Abrir GPI, dirigirse al menú de Reportes, seleccionar Cartera Vigente Resumida. Filtrar exclusivamente las operaciones de Renta Fija Nacional. Luego subirlo.  
+3. **Instrumentos**: seleccionar instrumentos de Renta Fija Nacional con precios públicos, dígase. Bonos, Depósitos y Pagarés Descontables del Banco Central (PDBC).  
+'''
 
 # Configuración de la página
-st.set_page_config(page_title="Generación de archivo de Renta Fija", page_icon="📈", layout="wide")
-st.markdown("# Generación de archivo de Renta Fija")
-st.sidebar.header("Generación de archivo de Renta Fija")
+config_page("Generación de archivo para Risk America", "📈", funcion, inputs)
 
-st.header("Generación de archivo para valorizar Renta Fija Nacional")
-fecha = st.session_state.get('fecha', 'no se encuentra')
+fecha = traer_fecha()
 
 col1, col2 = st.columns(2)
 
@@ -25,7 +30,7 @@ with col1:
         rnf_df['Subclase'] = rnf_df.apply(lambda row: "error" if row['primera_letra'] != "B" and row['Subclase'] == "BONO - Bono" else row['Subclase'], axis=1)
         valores_unicos = rnf_df['Subclase'].unique()
         opciones = list(valores_unicos)
-        seleccionadas = st.multiselect('Selecciona opciones:', opciones)
+        seleccionadas = st.multiselect('Selecciona instrumentos:', opciones)
         subclases = pd.DataFrame(seleccionadas, columns=['Subclase'])        
 
     if 'rnf_df' in locals() and 'input_df' in locals():
@@ -38,16 +43,7 @@ with col1:
 
 with col2:
     if 'merge2' in locals():
-        st.dataframe(merge2) 
-
-        # Descargar en formato xls nombre Archivo Para Valorizar Cartera RENTA FIJA NACIONAL NEVASA (Risk America) dd-mm-yyyy.
-        file_path = "Archivo Para Valorizar Cartera RENTA FIJA NACIONAL NEVASA (Risk America) " + fecha.strftime('%d-%m-%Y') + ".xlsx"
-        with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
-            merge2.to_excel(writer, index=False)
-        with open(file_path, "rb") as f:
-            st.download_button("Descargar archivo", f, file_name=file_path)
+        st.dataframe(merge2)
+        boton_descarga_xlsx(merge2, "Archivo Para Valorizar Cartera RENTA FIJA NACIONAL NEVASA (Risk America) " + fecha.strftime('%d-%m-%Y'), nombre_hoja="Sheet1")
     else:
         pass
-
-
-

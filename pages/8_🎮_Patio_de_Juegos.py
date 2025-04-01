@@ -1,6 +1,7 @@
-import streamlit as st
+from pages.auxiliares import *
+
+funcion = ""
+inputs = ""
 
 # Configuración de la página
-st.set_page_config(page_title="Patio de Juegos", page_icon="🎮", layout="wide")
-st.markdown("# Patio de Juegos")
-st.sidebar.header("Patio de Juegos")
+config_page("Patio de Juegos", "🎮", funcion, inputs)

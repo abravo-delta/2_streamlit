@@ -1,15 +1,30 @@
 import streamlit as st
 import pandas as pd
+from pages.auxiliares import config_page
+from pages.auxiliares import *
+
+funcion =  '''Compara ingresos y egresos entregados por el cliente, y genera archivos de descarga para GPI.''' 
+
+inputs = '''* **Traspasos internos**: Excel recibido por correo con nombre Traspasos internos de cuotas en GPI. 
+'''
 
 # Configuración de la página
-st.set_page_config(page_title="Traspasos internos", page_icon="🔁", layout="wide")
-st.markdown("# Traspasos internos")
-st.sidebar.header("Traspasos internos")
+config_page("Traspasos internos", "🔁", funcion, inputs)
 
 # Variables
-fecha = st.session_state.get('fecha', 'no se encuentra')
+fecha = traer_fecha()
 
 # Funciones
+def separar_traspasos(i, j, df):
+    df_x = df[df.iloc[:, i].notna()].drop(df.columns[j], axis=1)
+    df_x.columns.values[3] = "Cantidad" 
+    df_x['Monto'] = df_x['Monto'].round(0)
+    df_x['P*Q'] = df_x['Cantidad'] * df_x['Precio']
+    df_x['P*Q'] = df_x['P*Q'].apply(lambda x:round(x,0))
+    df_x['Dif'] = df_x['Monto'] - df_x['P*Q']
+    df_x['Dif'] = df_x['Dif'].abs()        
+    return df_x
+
 def leer_traspasos(archivo):
     df = pd.read_excel(archivo, sheet_name="Hoja1")
     
@@ -18,19 +33,8 @@ def leer_traspasos(archivo):
     df['Fecha Operacion'] = fecha.strftime('%d/%m/%Y')
     df['Fecha liquidacion'] = fecha.strftime('%d/%m/%Y')
 
-    def separar_traspasos(i, j):
-        df_x = df[df.iloc[:, i].notna()].drop(df.columns[j], axis=1)
-        df_x.columns.values[3] = "Cantidad" 
-        df_x['Monto'] = df_x['Monto'].round(0)
-        df_x['P*Q'] = df_x['Cantidad'] * df_x['Precio']
-        df_x['P*Q'] = df_x['P*Q'].apply(lambda x:round(x,0))
-        df_x['Dif'] = df_x['Monto'] - df_x['P*Q']
-        df_x['Dif'] = df_x['Dif'].abs()        
-        return df_x
-    
-    # Ejecutar 
-    df_egreso = separar_traspasos(3, 4)
-    df_ingreso = separar_traspasos(4, 3)
+    df_egreso = separar_traspasos(3, 4, df)
+    df_ingreso = separar_traspasos(4, 3, df)
 
     # Crear variables por nemo
     sum_q_ing = df_ingreso.groupby("Nemotecnico")["Cantidad"].sum().reset_index()
@@ -81,21 +85,14 @@ if archivo:
                 )
             with col2:
                 st.dataframe(res_traspasos)
-                df_ingreso = df_ingreso.drop(columns=['P*Q','Dif'])
-
+    
     # Descarga
     col1, col2 = st.columns(2)
+
+    df_ingreso = df_ingreso.drop(columns=['P*Q','Dif'])
     file_path = "Ingresos.xlsx"
-    with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
-        df_ingreso.to_excel(writer, index=False)
-    with open(file_path, "rb") as f:
-        with col1:
-            st.download_button("Descargar Ingresos", f, file_name="Ingresos.xlsx")                
+    boton_descarga_xlsx(df_ingreso, "Ingresos", nombre_hoja="Sheet1")
 
     df_egreso = df_egreso.drop(columns=['P*Q','Dif'])
     file_path = "Egresos.xlsx"
-    with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
-        df_egreso.to_excel(writer, index=False)
-    with open(file_path, "rb") as f:
-        with col2:
-            st.download_button("Descargar Egresos", f, file_name="Egresos.xlsx")
+    boton_descarga_xlsx(df_egreso, "Egreso", nombre_hoja="Sheet1")

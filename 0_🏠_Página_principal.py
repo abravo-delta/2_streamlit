@@ -2,63 +2,70 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import os
+import re
+from pages.auxiliares import *
 
 # Configuración de la página
-st.set_page_config(page_title="Robot procesos diarios", page_icon="🏠", layout="wide")
-st.markdown("# Robot procesos diarios")
-st.sidebar.header("Robot procesos diarios")
+config_page("Welcome", "🏠")
+
+col1, col2 = st.columns([4,1])
 
 # Fecha
-hoy = datetime.today()
-fecha = st.sidebar.date_input('Fecha', value=hoy)
-fecha = datetime.combine(fecha, datetime.min.time())
-st.session_state['fecha'] = fecha
-
-# Función para cargar datos
-@st.cache_data
-def load_data(file_path):
-    if os.path.exists(file_path):
-        return pd.read_csv(file_path)
-    else:
-        return pd.DataFrame(columns=['Checklist', 'Tarea', 'Subtarea'])
-
-# Función para guardar datos
-def save_data(df, file_path):
-    df.to_csv(file_path, index=False)
-
-# Cargar datos
-pendientes_path = 'pendientes.csv'
-dia_a_dia_path = 'dia_a_dia.csv'
-
-if 'pendientes' not in st.session_state:
-    st.session_state['pendientes'] = load_data(pendientes_path)
-    if st.session_state['pendientes'].empty:
-        st.session_state['pendientes'] = pd.DataFrame({
-            'Checklist': [False],
-            'Tarea': [''],
-            'Subtarea': ['']
-        })
-
-if 'dia_a_dia' not in st.session_state:
-    st.session_state['dia_a_dia'] = load_data(dia_a_dia_path)
-    if st.session_state['dia_a_dia'].empty:
-        st.session_state['dia_a_dia'] = pd.DataFrame({
-            'Checklist': [False],
-            'Tarea': [''],
-            'Subtarea': ['']
-        })
-
-# Checklist
-col1, col2 = st.columns(2)
-with col1:
-    st.header("Tareas generales")
-    st.session_state['pendientes'] = st.data_editor(st.session_state['pendientes'], key="editor1", num_rows="dynamic")
 with col2:
-    st.header("Tareas diarias")
-    st.session_state['dia_a_dia'] = st.data_editor(st.session_state['dia_a_dia'], key="editor2", num_rows="dynamic")
+    hoy = datetime.today()
+    fecha = st.date_input('Fecha', value=hoy)
+    fecha = datetime.combine(fecha, datetime.min.time())
+    st.session_state['fecha'] = fecha
 
-# Guardar datos al cerrar la aplicación
-if st.button('Guardar cambios'):
-    save_data(st.session_state['pendientes'], pendientes_path)
-    save_data(st.session_state['dia_a_dia'], dia_a_dia_path)
-    st.success('Datos guardados correctamente')
+directory = "pages"
+files = os.listdir(directory)
+df = pd.DataFrame(files, columns=['file_name'])
+df['section_name'] = df['file_name'].str.replace("_", " ", regex=False)
+df['section_name'] = df['section_name'].str.replace(".py", "", regex=False)
+df['section_name'] = df['section_name'].apply(lambda x: " ".join(x.split()[1:]))
+
+try:
+    df = df[~df['section_name'].isin(["", "auxiliares", "init", "pycache"])]
+except ValueError:
+    pass
+
+# Extraer la variable `funcion` de cada archivo
+def extract_function_value_safely(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                match = re.match(r'^funcion\s*=\s*(.+)', line)
+                if match:
+                    value = match.group(1)
+                    return eval(value, {}, {})  # Solo evaluamos esa línea
+        return 'funcion not found'
+    except Exception as e:
+        return f'Error: {e}'
+ 
+# Aplicar a cada archivo en el df
+df['funcion'] = df['file_name'].apply(lambda fn: extract_function_value_safely(os.path.join('pages', fn)))
+
+
+# Descripción
+with col1:
+    st.markdown("## ¡Hola!")
+    st.markdown(f'''
+                Te damos la bienvenida a la página web de apoyo en los procesos diarios del area de Operaciones de Delta, Servicios Financieros.  
+                El sitio tiene secciones que te permitirán realizar distintas tareas de forma rápida, intuitiva y sencilla,  
+                Ahora mismo te encuentras en la sección :blue-background[Página principal]. Pero tenemos otras {len(files)} secciones que puedes explorar:
+                ''')
+    for _, row in df.iterrows():
+        section = row['section_name']
+        funcion = row['funcion']
+        file_name = row['file_name']
+        # Mostrar en un expander
+        with st.expander(section):
+            st.write(funcion)
+            directorio = "pages/" + file_name
+            st.page_link(directorio, label = "🔗 Ir al sitio")
+
+# Puntuación
+with col2:
+    st.text("¿Qué te pareció la página?")
+    sentiment_mapping = ["uno", "dos", "tres", "cuatro", "cinco"]
+    selected = st.feedback("stars")

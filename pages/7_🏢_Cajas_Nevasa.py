@@ -6,11 +6,18 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 import time 
+from pages.auxiliares import *
+
+funcion = "Extrae el valor de las cajas a la fecha desde la página web de Nevasa, tanto en dólares como en pesos."
+
+inputs = '''1. **Sitio Web Nevasa**: Ingresar el link del sitio Web de Nevasa, sección de Inicio de Sesión.  
+2. **Rut**: Ingrese el Rut del Inicio de Sesión de Nevasa.  
+3. **Contraseña**: Ingrese la contraseña del sitio.  
+4. **Fondos**: Seleccione los fondos de los que se desea extraer las cajas.  
+'''
 
 # Configuración de la página
-st.set_page_config(page_title="Cajas Nevasa", page_icon="🏢", layout="wide")
-st.markdown("# Cajas Nevasa")
-st.sidebar.header("Cajas Nevasa")
+config_page("Cajas Nevasa", "🏢", funcion, inputs)
 
 # Ver esto en dos columnas
 col1, col2 = st.columns(2)
