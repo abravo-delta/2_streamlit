@@ -36,7 +36,7 @@ with col1:
     if 'rnf_df' in locals() and 'input_df' in locals():
         merge1 = pd.merge(rnf_df, subclases, on='Subclase', how='inner')
         merge2 = pd.merge(input_df, merge1, on='NEMO', how='inner')
-        merge2 = merge2.drop_duplicates()
+        merge2 = merge2.drop_duplicates(subset=["NEMO", "CANTIDAD"])
         merge2 = merge2.iloc[:, 0:2]
     else:
         pass

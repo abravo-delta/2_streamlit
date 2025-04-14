@@ -1,6 +1,6 @@
 import streamlit as st
 import time
-from datetime import timedelta
+from datetime import timedelta,datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
@@ -24,6 +24,10 @@ destinatario = st.text_input("Destinatarios", destinatarios_usuales)
 
 # Funciones
 
+def hora_actual_formato_mmhh():
+    ahora = datetime.now()
+    return ahora.strftime("%H:%M")
+
 def seleccionar_fecha(mañana):
     action = ActionChains(driver)
     driver.find_element(By.ID,"_calendarioButton").click()
@@ -41,6 +45,7 @@ def seleccionar_fecha(mañana):
 
 # 2. Revisar el valor del dolar y enviar alerta
 def revisar_paridad(divisa):
+    mensaje = st.empty()
     while True:
         driver.refresh()
         if divisa == "dolar":
@@ -49,10 +54,12 @@ def revisar_paridad(divisa):
             valor = driver.find_element(By.ID,"lblValor1_5").text
         if  valor != "ND":
             correo_alerta(divisa, valor)
+            driver.close()
             break
         else:
             time.sleep(20)
-            st.write(f"Consultado {divisa}...")
+            minutuo = hora_actual_formato_mmhh()
+            mensaje.write(f"Consultado {divisa}... {minutuo}")
         
 # 3. Detalle de correo alerta
 def correo_alerta(divisa, valor):

@@ -4,9 +4,11 @@ from datetime import datetime
 import os
 import re
 from pages.auxiliares import *
+import warnings
 
 # Configuración de la página
 config_page("Welcome", "🏠")
+warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
 col1, col2 = st.columns([4,1])
 
@@ -48,11 +50,10 @@ df['funcion'] = df['file_name'].apply(lambda fn: extract_function_value_safely(o
 
 # Descripción
 with col1:
-    st.markdown("## ¡Hola!")
     st.markdown(f'''
                 Te damos la bienvenida a la página web de apoyo en los procesos diarios del area de Operaciones de Delta, Servicios Financieros.  
-                El sitio tiene secciones que te permitirán realizar distintas tareas de forma rápida, intuitiva y sencilla,  
-                Ahora mismo te encuentras en la sección :blue-background[Página principal]. Pero tenemos otras {len(files)} secciones que puedes explorar:
+                El sitio tiene secciones que te permitirán realizar distintas tareas de forma rápida e intuitiva. Y si no sabes por dónde empezar, no te preocupes, tenemos una sección de Manuales para ayudarte.  
+                Ahora mismo te encuentras en la sección :blue-background[Página principal]. Pero tenemos otras {len(files)-3} secciones que puedes explorar:
                 ''')
     for _, row in df.iterrows():
         section = row['section_name']

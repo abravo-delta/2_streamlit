@@ -13,7 +13,11 @@ def help (funcion, inputs):
 
 # Configuración de las páginas con streamlit
 def config_page(titulo, icono, funcion="", inputs=""):
-    st.set_page_config(page_title=titulo, page_icon=icono, layout="wide")
+    st.set_page_config(page_title=titulo, 
+                       page_icon=icono, 
+                       layout="wide",
+                       initial_sidebar_state="expanded")
+    
     st.sidebar.header(titulo)
     st.title(titulo)
     if funcion != "" or inputs !="":

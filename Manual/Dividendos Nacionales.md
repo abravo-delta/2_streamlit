@@ -1,0 +1,3 @@
+1. Descargue el Resumen de Dividendos y Repartos de Capital de la Bolsa de Santiago, disponible en el Boletín Diario. 
+2. De los dividendos y repartos de capital señalados en el Resumen, identifique los instrumentos que se encuentren en cartera y cuyo precio límite o de pago sea superior al día de hoy. Para ello puede ayudarse del [visualizador de dividendos](http://localhost:8501/Dividendos) disponible en esta página web.
+3. Los dividendos cuya fecha límite sea anterior o igual al día de hoy y no estén ingresados, deben ingresarse en GPI. Para ello ingrese a GPI Escritorio > AGF > Back Office > Procesos > Cierre > Proceso Eventos de Capital. 
