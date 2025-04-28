@@ -1,0 +1,5 @@
+Tarea,Cliente,Encargado,Fecha,Estado
+Cerrar el ahorro,Nevasa,['Amanda'],2025-04-14 00:00:00,En Proceso
+Crear administrador de tareas,Otros,['Amanda'],,En Proceso
+ Administrador de tareas,Nevasa,['Betania'],,Pendiente
+ Gestor de claves,Otros,['Maximiliano'],2025-04-21,Pendiente

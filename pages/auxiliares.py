@@ -17,12 +17,13 @@ def config_page(titulo, icono, funcion="", inputs=""):
                        page_icon=icono, 
                        layout="wide",
                        initial_sidebar_state="expanded")
-    
     st.sidebar.header(titulo)
     st.title(titulo)
     if funcion != "" or inputs !="":
         with st.expander("❔ Ayuda"):
             help(funcion, inputs)
+#    with st.sidebar:
+#        st.logo("/ISOTIPO.png", size="large")
 
 # Extraer fecha de calendario de página principal
 def traer_fecha():

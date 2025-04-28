@@ -91,4 +91,7 @@ with col2:
 
 if carteras_df is not None and dividendos_df is not None:
     dividendos_df = pd.merge(carteras_df, dividendos_df, on='Nemotécnico', how='inner')
+    dividendos_df['Límite (1)'] = pd.to_datetime(dividendos_df['Límite (1)'])
+    dividendos_df = dividendos_df.sort_values('Límite (1)')
+    dividendos_df['Límite (1)'] = dividendos_df['Límite (1)'].dt.strftime('%d-%m-%Y')
     st.dataframe(dividendos_df)
