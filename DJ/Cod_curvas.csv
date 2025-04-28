@@ -1,0 +1,40 @@
+﻿ Código , Curvas de tasas de interés 
+1, Euribor 1 mes 
+2, Euribor 3 meses 
+3, Euribor 6 meses 
+4, Euribor 12 meses 
+5, Libor dólar canadiense 3  meses 
+6, Libor dólar canadiense 6 meses 
+7, Libor dólar canadiense 12 meses 
+8, Libor euro 1 mes 
+9, Libor euro 3 meses 
+10, Libor euro 6 meses 
+11, Libor euro 12 meses 
+12, Libor libra esterlina 1 mes 
+13, Libor libra esterlina 3 meses 
+14, Libor libra esterlina 6 meses 
+15, Libor libra esterlina 12 meses 
+16, Libor usd 1 mes 
+17, Libor usd 2 meses 
+18, Libor usd 3 meses 
+19, Libor usd 4 meses 
+20, Libor usd 6 meses 
+21, Libor usd 12 meses 
+22, Libor yen 1 mes 
+23, Libor yen 3 meses 
+24, Libor yen 6 meses 
+25, Libor yen 12 meses 
+26, Libor franco suizo 1 mes 
+27, Libor franco suizo 3 meses 
+28, Libor franco suizo 6 meses 
+29, Libor franco suizo 12 meses 
+30, Pibor (paris interbank offered rate) 
+31, Prime usa 
+32, Short term prime rate yen 
+33, Tab uf 3 meses 
+34, Tab uf 6 meses 
+35, Tab uf 12 meses 
+36, Tab nominal 1 mes 
+37, Tab nominal 3 meses 
+39, Tab nominal 12 meses 
+40, Otras 
